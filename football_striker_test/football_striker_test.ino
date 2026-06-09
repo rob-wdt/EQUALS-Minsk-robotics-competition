@@ -345,6 +345,7 @@ void loop()
     digitalWrite(LED_BUILTIN, millis() % 1000 > 500);
     Camera();
     gyro();
+    ball_retention = analogRead(PHOTOTRANSISTOR_PIN);
 
     ball_cam_angle = normalize_angle(ball_cam_angle);
 
@@ -366,7 +367,20 @@ void loop()
     align_angle = normalize_angle(blue_angle);
 #endif
 
+    readSensors();
+    bool kicking{ball_retention <= 30};
+    Serial.println(kicking);
+
     goAngle(move_angle, align_angle, SPEED);
+    if (kicking)
+    {
+        if (millis() - timer_kick >= 3000)
+        {
+            kick();
+            timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+        }
+        kick_Del();
+    }
 
     Serial.println(String{ball_cam_angle} + '\t' + String{move_angle});
 
@@ -421,17 +435,23 @@ void loop()
     Serial.println(ball_ts_angle);
 
 #elif OTLADKA == 5
-    if (millis() - timer_kick >= 5000)
+    readSensors();
+    bool kicking{ball_retention <= 30};
+    Serial.println(kicking);
+    if (kicking)
     {
-        kick();
-        timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+        if (millis() - timer_kick >= 3000)
+        {
+            kick();
+            timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+        }
+        kick_Del();
     }
-    kick_Del();
     //  Serial.print("  ");
     //  Serial.println("1241");
 #elif OTLADKA == 6
     updates();
-    dribler(1614);
+    dribler(1555);
     /*if (ball_cam_dist <= 20) {
         dribler(1615);
         driblerON = true;
@@ -443,8 +463,10 @@ void loop()
         else if (ball_cam_dist > 20 && ball_cam_dist != 0) {dribler(0);driblerON = false;}*/
 #elif OTLADKA == 7
     readSensors();
-    Serial.print("ball_retention:\t");
-    Serial.println(ball_retention);
+    // Serial.print("ball_retention:\t");
+    // Serial.println(ball_retention);
+    bool kicking{ball_retention <= 30};
+    Serial.println(kicking);
     //  Serial.print("Right_dist");
     //  Serial.print(Right_dist);
     //  Serial.print("Forward_dist");
