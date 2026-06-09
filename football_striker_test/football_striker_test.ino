@@ -22,6 +22,17 @@
 */
 
 #define SPEED 150
+
+#define GOAL_YELLOW 0
+#define GOAL_BLUE 1
+
+#define OWN_GOAL GOAL_BLUE //////////////////////////
+
+#if OWN_GOAL == GOAL_YELLOW
+#define OPP_GOAL GOAL_BLUE
+#elif OWN_GOAL == GOAL_BLUE
+#define OPP_GOAL GOAL_YELLOW
+#endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Servo dribblerESC;
@@ -232,7 +243,7 @@ void setup()
     pinMode(pinsolin, OUTPUT);
     pinMode(BALL_SEN_SIGNAL_1, INPUT_PULLUP);
     pinMode(BALL_SEN_SIGNAL_2, INPUT_PULLUP);
-    pinMode(FOTOTRANZ, INPUT);
+    pinMode(PHOTOTRANSISTOR_PIN, INPUT);
     digitalWrite(30, LOW);
     digitalWrite(24, LOW);
     digitalWrite(22, LOW);
@@ -348,7 +359,14 @@ void loop()
         move_angle += 90;
     }
 
-    goAngle(move_angle, 0, SPEED);
+    int16_t align_angle{};
+// #if OPP_GOAL == GOAL_YELLOW
+//     align_angle = normalize_angle(yel_angle);
+// #elif OPP_GOAL == GOAL_BLUE
+//     align_angle = normalize_angle(blue_angle);
+// #endif
+
+    goAngle(move_angle, align_angle, SPEED);
 
     Serial.println(String{ball_cam_angle} + '\t' + String{move_angle});
 
@@ -373,22 +391,22 @@ void loop()
     // Camera();
     updates();
     Serial.print("yellow_angle\t  ");
-    Serial.print(yel_angle);
+    Serial.print(normalize_angle(yel_angle));
     Serial.print("  ||  ");
     Serial.print("yellow_dist\t  ");
     Serial.print(yel_dist);
     Serial.print("  ||  ");
-    Serial.print("ball_angle\t  ");
-    Serial.print(ball_cam_angle);
-    Serial.print("  ||  ");
-    Serial.print("ball dist\t  ");
-    Serial.print(ball_cam_dist);
-    Serial.print("  ||  ");
     Serial.print("blue angle\t  ");
-    Serial.print(blue_angle);
+    Serial.print(normalize_angle(blue_angle));
     Serial.print("  ||  ");
     Serial.print("blue dist\t  ");
     Serial.print(blue_dist);
+    Serial.print("  ||  ");
+    Serial.print("ball_angle\t  ");
+    Serial.print(normalize_angle(ball_cam_angle));
+    Serial.print("  ||  ");
+    Serial.print("ball dist\t  ");
+    Serial.print(ball_cam_dist);
     Serial.println(" "); // 180-
 #elif OTLADKA == 4
     data_tcops();
@@ -475,7 +493,17 @@ void loop()
 #elif OTLADKA == 9
     gyro();
     curAngle = lead_to_degree_borders(angleGyro - errAngleGyro);
-    Serial.println("current angle:\t" + String{curAngle});
+    Camera();
+
+    int16_t align_angle{};
+#if OPP_GOAL == GOAL_YELLOW
+    align_angle = normalize_angle(yel_angle);
+#elif OPP_GOAL == GOAL_BLUE
+    align_angle = normalize_angle(blue_angle);
+#endif
+
+    Serial.println("current angle:\t" + String{curAngle} + "\tgoal angle:\t" + String{align_angle});
+
     goAngle(0, 0, 0);
 #endif
 

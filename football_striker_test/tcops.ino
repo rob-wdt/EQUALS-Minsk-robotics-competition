@@ -40,6 +40,6 @@ void readSensors(){
 //  Right_dist = analogRead(DATCHIK_DIST_RIGHT);
 //  Forward_dist = analogRead(DATCHIK_DIST_FORWARD);
 //  Back_dist = analogRead(DATCHIK_DIST_BACK);
-  ball_retention = analogRead(FOTOTRANZ);
+  ball_retention = analogRead(PHOTOTRANSISTOR_PIN);
   
 }

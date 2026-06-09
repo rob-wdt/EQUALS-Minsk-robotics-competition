@@ -5,16 +5,28 @@ from machine import LED
 import math
 
 
-EXPOSURE_TIME_SCALE = 0.4
-my_gain = 25
-exposure = 90_000
-white = (63, 59, 61)
-blue_threshold = (29, 100, -128, -19, -5, 10)
-yellow_threshold = (31, 100, -20, 2, 28, 50)
+CAM = 1
 
-Orange_threshold = (0, 100, -2, 127, 18, 127)
-img_radius = 120
-center = (sensor.width() // 2 + 13, sensor.height() // 2 - 7)
+if CAM == 0:
+    my_gain = 25
+    exposure = 90_000
+    white = (63, 59, 61)
+    blue_threshold = (29, 100, -128, -19, -5, 10)
+    yellow_threshold = (31, 100, -20, 2, 28, 50)
+
+    Orange_threshold = (0, 100, -2, 127, 18, 127)
+    img_radius = 120
+    center = (sensor.width() // 2 + 13, sensor.height() // 2 - 7)
+elif CAM == 1:  # attacker
+    my_gain = 25
+    exposure = 90_000
+    white = (63, 59, 61)
+    blue_threshold = (29, 100, -128, -19, -5, 7)
+    yellow_threshold = (31, 100, -20, 2, 28, 50)
+
+    Orange_threshold = (0, 100, -2, 127, 18, 127)
+    img_radius = 120
+    center = (sensor.width() // 2 + 0, sensor.height() // 2 - 22)
 
 
 led = LED("LED_GREEN")
@@ -160,7 +172,6 @@ def send_data(num1, num2, num3, num4, num5, num6):
 
     for i in data:
         uart.writechar(i)
-        print(i, end='\t')
 
 
 def get_distance(x, y):
