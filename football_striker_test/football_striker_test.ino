@@ -360,11 +360,11 @@ void loop()
     }
 
     int16_t align_angle{};
-// #if OPP_GOAL == GOAL_YELLOW
-//     align_angle = normalize_angle(yel_angle);
-// #elif OPP_GOAL == GOAL_BLUE
-//     align_angle = normalize_angle(blue_angle);
-// #endif
+#if OPP_GOAL == GOAL_YELLOW
+    align_angle = normalize_angle(yel_angle);
+#elif OPP_GOAL == GOAL_BLUE
+    align_angle = normalize_angle(blue_angle);
+#endif
 
     goAngle(move_angle, align_angle, SPEED);
 
@@ -504,7 +504,7 @@ void loop()
 
     Serial.println("current angle:\t" + String{curAngle} + "\tgoal angle:\t" + String{align_angle});
 
-    goAngle(0, 0, 0);
+    goAngle(0, align_angle, 0);
 #endif
 
     // delay(200);  // антидребезг
