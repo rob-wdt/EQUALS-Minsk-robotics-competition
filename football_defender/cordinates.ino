@@ -25,18 +25,18 @@ void polar_dek(float longsX, float alphaX, float longsY, float alphaY) {
   else alphaGLK = lead_to_degree_borders(atan2(sum_y, sum_x) * 180.0 / PI);
 }
 void coordinates() {
-  int sideGame = 1;
-  if (sideGame == 1) {
+#if OWN_GOAL == GOAL_YELLOW
     forward_dist = blue_dist ;//blue_dist
     backward_dist = yel_dist;//yel_dist
     forward_angle = blue_angle;//blue_angle
     backward_angle = yel_angle;//yel_angle
-  } else {
+#elif OWN_GOAL == GOAL_BLUE
     forward_dist = yel_dist ;//blue_dist
     backward_dist = blue_dist;//yel_dist
     forward_angle = yel_angle;//blue_angle
-    backward_angle = blue_angle;//yel_angle
-  }
+    backward_angle = blue_angle;
+#endif
+  
   if(forward_angle == 0 && forward_dist == 0) forward_angle = 0;
   abs_ball_angle = lead_to_degree_borders(ball_cam_angle + corAng);
   abs_forward_angle = lead_to_degree_borders(forward_angle + corAng);

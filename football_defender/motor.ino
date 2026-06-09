@@ -13,10 +13,10 @@ void goAngle(float angle, float seeAngle, int speeds)
     //  Serial.print("speedMotor2");
     //  Serial.print(speedRotate);
     //  Serial.println("speedRotate");
-    motor1.setSpeeds(speeds * cos((-45 + angle) / 180 * 3.14) + speedRotate);
-    motor2.setSpeeds(-speeds * cos((-135 + angle) / 180 * 3.14) + speedRotate);
-    motor3.setSpeeds(speeds * cos((135 + angle) / 180 * 3.14) + speedRotate);
-    motor4.setSpeeds(-speeds * cos((45 + angle) / 180 * 3.14) + speedRotate);
+    motor1.setSpeeds(-speeds * cos((-45 + angle) / 180 * 3.14) - speedRotate);
+    motor2.setSpeeds(speeds * cos((-135 + angle) / 180 * 3.14) - speedRotate);
+    motor3.setSpeeds(-speeds * cos((135 + angle) / 180 * 3.14) - speedRotate);
+    motor4.setSpeeds(speeds * cos((45 + angle) / 180 * 3.14) - speedRotate);
 }
 
 void kick()

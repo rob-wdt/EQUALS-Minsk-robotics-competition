@@ -25,6 +25,14 @@ void Camera() {
         blue_dist = data_cam[3] * 3;
         ball_cam_dist = data_cam[4] * 3;
         ball_cam_angle = data_cam[5] * 3;
+
+#if OWN_GOAL == GOAL_YELLOW
+        own_goal_angle = yel_angle;
+        own_goal_distance = yel_distance;
+#elif OWN_GOAL == GOAL_BLUE
+        own_goal_angle = blue_angle;
+        own_goal_distance = blue_dist;
+#endif
         
         //        Serial.print("  ball_cam_dist  ");
         //        Serial.print(ball_cam_dist);//180-
@@ -47,4 +55,16 @@ uint8_t crc8(uint8_t* data, int len)
   }
 
   return crc;
+}
+
+float normalize_angle(float angle) // from the camera we recieve the angle between 0 and 360. if the ball is leftside (the angle should be negative), it is between 180 and 360. so, this function converts the angle from the camera to the real angle.
+{
+    if (angle > 0 && angle <= 180)
+    {
+        return angle;
+    }
+    else if (angle >= 180 && angle < 360)
+    {
+        return angle - 360;
+    }
 }

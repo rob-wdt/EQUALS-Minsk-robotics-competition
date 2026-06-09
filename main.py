@@ -5,13 +5,13 @@ from machine import LED
 import math
 
 
-CAM = 1
+CAM = 0
 
-if CAM == 0:
+if CAM == 0:    # defender
     my_gain = 25
-    exposure = 90_000
+    exposure = 100_000
     white = (63, 59, 61)
-    blue_threshold = (29, 100, -128, -19, -5, 10)
+    blue_threshold = (13, 51, -128, -6, -128, 4)
     yellow_threshold = (31, 100, -20, 2, 28, 50)
 
     Orange_threshold = (0, 100, -2, 127, 18, 127)
@@ -254,7 +254,7 @@ while True:
     # blue
     old_area = 0
 
-    blue_blobs = img.find_blobs([blue_threshold], invert=False, merge=True, margin=25)
+    blue_blobs = img.find_blobs([blue_threshold], invert=False, merge=True, margin=25, pixels_threshold=10)
     for Blue_blob in blue_blobs:
         if Blue_blob.pixels() > 80 and 5000 > Blue_blob.pixels():
             if (Blue_blob[2] * Blue_blob[3] > old_area and Blue_blob[2] * Blue_blob[3] > 100):
