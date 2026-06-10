@@ -5,28 +5,28 @@ from machine import LED
 import math
 
 
-CAM = 0
+CAM = 1
 
 if CAM == 0:    # defender
-    my_gain = 25
-    exposure = 100_000
+    my_gain = 20
+    exposure = 50_000
     white = (63, 59, 61)
-    blue_threshold = (13, 51, -128, -6, -128, 4)
-    yellow_threshold = (31, 100, -20, 2, 28, 50)
+    blue_threshold = (0, 100, -128, 1, -128, -9)
+    yellow_threshold = (0, 100, -2, 20, 32, 60)
 
-    Orange_threshold = (0, 100, -2, 127, 18, 127)
+    Orange_threshold = (0, 100, 26, 127, -128, 127)
     img_radius = 120
     center = (sensor.width() // 2 + 13, sensor.height() // 2 - 7)
 elif CAM == 1:  # attacker
-    my_gain = 25
-    exposure = 90_000
+    my_gain = 20
+    exposure = 50_000
     white = (63, 59, 61)
-    blue_threshold = (29, 100, -128, -19, -5, 7)
-    yellow_threshold = (31, 100, -20, 2, 28, 50)
+    blue_threshold = (0, 100, -128, -10, -128, -4)
+    yellow_threshold = (0, 79, -11, 22, 37, 81)
 
-    Orange_threshold = (0, 100, -2, 127, 18, 127)
+    Orange_threshold = (0, 100, 17, 127, -5, 127)
     img_radius = 120
-    center = (sensor.width() // 2 + 0, sensor.height() // 2 - 22)
+    center = (sensor.width() // 2 + 3, sensor.height() // 2 - 15)
 
 
 led = LED("LED_GREEN")
@@ -215,9 +215,9 @@ dx3, dy3 = 0, 0
 while True:
     clock.tick()
     img = sensor.snapshot().mask_circle(center[0], center[1], img_radius)
-    img.draw_circle(center[0], center[1], 15, (0, 0, 0), fill=True)
+    img.draw_circle(center[0], center[1], 12, (0, 0, 0), fill=True)
     old_roundness = 0
-    for Orange_blob in img.find_blobs([Orange_threshold], invert=False, merge=True, margin=5, area_threshold=1, pixels_threshold=2):
+    for Orange_blob in img.find_blobs([Orange_threshold], invert=False, merge=True, margin=5, area_threshold=1, pixels_threshold=1):
         # print(Orange_blob.pixels())
         if Orange_blob.pixels() > 5:
             if Orange_blob.area() >= 3:

@@ -26,7 +26,7 @@
 #define GOAL_YELLOW 0
 #define GOAL_BLUE 1
 
-#define OWN_GOAL GOAL_BLUE //////////////////////////
+#define OWN_GOAL GOAL_YELLOW //////////////////////////
 
 #if OWN_GOAL == GOAL_YELLOW
 #define OPP_GOAL GOAL_BLUE

@@ -363,9 +363,21 @@ void loop()
     Serial.print("\t||\t");
     Serial.println(y);
 
+    bool kicking{ball_retention <= 2};
+
     // if (y <= 70)
     // {
         goAngle(move_angle, 0, linear_speed);
+        
+        if (kicking)
+        {
+            if (millis() - timer_kick >= 3000)
+            {
+                kick();
+                timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+            }
+            kick_Del();
+        }
     // }
     // else
     // {
