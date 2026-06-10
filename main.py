@@ -5,18 +5,18 @@ from machine import LED
 import math
 
 
-CAM = 1
+CAM = 0
 
 if CAM == 0:    # defender
     my_gain = 20
     exposure = 50_000
     white = (63, 59, 61)
     blue_threshold = (0, 100, -128, 1, -128, -9)
-    yellow_threshold = (0, 100, -2, 20, 32, 60)
+    yellow_threshold = (58, 77, -1, 17, 30, 54)
 
     Orange_threshold = (0, 100, 26, 127, -128, 127)
     img_radius = 120
-    center = (sensor.width() // 2 + 13, sensor.height() // 2 - 7)
+    center = (sensor.width() // 2 + 9, sensor.height() // 2 - 9)
 elif CAM == 1:  # attacker
     my_gain = 20
     exposure = 50_000
@@ -65,37 +65,35 @@ blue_distance = 0
 ANGLE_OFFSET = 0
 ANGLE_OFFSET_BALL = 0
 distance = [
-    [210, 85],
-    [175, 84],
-    [165, 83],
-    [155, 82],
-    [145, 81],
-    [140, 80],
-    [135, 79],
-    [125, 78],
-    [120, 77],
-    [115, 76],
-    [110, 75],
-    [105, 73],
-    [100, 71],
+    [210, 89],
+    [175, 88],
+    [165, 87],
+    [140, 86],
+    [135, 84],
+    [125, 82],
+    [120, 81],
+    [115, 79],
+    [110, 77],
+    [105, 74],
+    [100, 72],
     [95, 70],
-    [90, 67],
+    [90, 68],
     [85, 65],
-    [80, 64],
-    [75, 64],
-    [70, 62],
-    [65, 61],
-    [60, 57],
-    [55, 54],
-    [50, 51],
-    [45, 49],
-    [40, 47],
-    [35, 44],
-    [30, 40],
-    [25, 31],
-    [20, 28],
-    [15, 25],
-    [10, 17]
+    [80, 62],
+    [75, 59],
+    [70, 55],
+    [65, 53],
+    [60, 51],
+    [55, 48],
+    [50, 45],
+    [45, 40],
+    [40, 36],
+    [35, 32],
+    [30, 28],
+    [25, 23],
+    [20, 18],
+    [15, 13],
+    [10, 9]
 ]
 
 # 160/120
@@ -118,7 +116,7 @@ data = bytearray(7)
 
 
 def send_data(num1, num2, num3, num4, num5, num6):
-    print(num1, num2, num3, num4, num5, num6, sep='\t')
+    # print(num1, num2, num3, num4, num5, num6, sep='\t')
 
     uart.writechar(255)
     # uart.writechar(stage)
@@ -311,7 +309,7 @@ while True:
         img.draw_rectangle(Yel_blob.rect(), color=(0, 0, 0), thickness=5)
 
     # print(Yel_alpha)
-    # print(Yel_dist)
+    print(Yel_dist)
     # print(Yel_alpha, Blue_alpha)
     # print(dx3, dy3, Orange_alpha, Orange_dist)
     img.draw_line(bdx, bdy, ydx, ydy, (255, 255, 255), 3)

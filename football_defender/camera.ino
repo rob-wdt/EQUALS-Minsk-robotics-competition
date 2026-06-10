@@ -28,7 +28,7 @@ void Camera() {
 
 #if OWN_GOAL == GOAL_YELLOW
         own_goal_angle = yel_angle;
-        own_goal_distance = yel_distance;
+        own_goal_distance = yel_dist;
 #elif OWN_GOAL == GOAL_BLUE
         own_goal_angle = blue_angle;
         own_goal_distance = blue_dist;
