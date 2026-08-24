@@ -5,28 +5,49 @@ from machine import LED
 import math
 
 
-CAM = 0
+CAM = 1
 
 if CAM == 0:    # defender
+    # my_gain = 20
+    # exposure = 100_000
+    # white = (63, 59, 61)
+    # blue_threshold = (0, 100, -128, -1, -128, -5)
+    # yellow_threshold = (0, 100, -128, 26, 49, 127)
+
+    # Orange_threshold = (0, 100, 26, 127, -128, 127)
+    # img_radius = 120
+    # center = (sensor.width() // 2 + 12, sensor.height() // 2 - 5)
+
     my_gain = 20
     exposure = 50_000
     white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, 1, -128, -9)
-    yellow_threshold = (58, 77, -1, 17, 30, 54)
+    blue_threshold = (0, 100, -128, -1, -128, -5)
+    yellow_threshold = (0, 100, -3, 28, 36, 56)
 
     Orange_threshold = (0, 100, 26, 127, -128, 127)
     img_radius = 120
-    center = (sensor.width() // 2 + 9, sensor.height() // 2 - 9)
+    center = (sensor.width() // 2 + 12, sensor.height() // 2 - 5)
+
 elif CAM == 1:  # attacker
+    # my_gain = 20
+    # exposure = 100_000
+    # white = (63, 59, 61)
+    # blue_threshold = (24, 68, -60, 2, -88, 6)
+    # yellow_threshold = (0, 100, -1, 21, 45, 58)
+
+    # Orange_threshold = (0, 100, 17, 127, -5, 127)
+    # img_radius = 120
+    # center = (sensor.width() // 2 - 8, sensor.height() // 2 - 20)
+
     my_gain = 20
     exposure = 50_000
     white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, -10, -128, -4)
-    yellow_threshold = (0, 79, -11, 22, 37, 81)
+    blue_threshold = (0, 100, -128, -3, -128, -6)
+    yellow_threshold = (0, 100, -4, 20, 30, 49)
 
-    Orange_threshold = (0, 100, 17, 127, -5, 127)
+    Orange_threshold = (0, 100, 20, 127, -128, 127)
     img_radius = 120
-    center = (sensor.width() // 2 + 3, sensor.height() // 2 - 15)
+    center = (sensor.width() // 2 - 6, sensor.height() // 2 - 20)
 
 
 led = LED("LED_GREEN")
@@ -64,37 +85,75 @@ yellow_distance = 0
 blue_distance = 0
 ANGLE_OFFSET = 0
 ANGLE_OFFSET_BALL = 0
-distance = [
-    [210, 89],
-    [175, 88],
-    [165, 87],
-    [140, 86],
-    [135, 84],
-    [125, 82],
-    [120, 81],
-    [115, 79],
-    [110, 77],
-    [105, 74],
-    [100, 72],
-    [95, 70],
-    [90, 68],
-    [85, 65],
-    [80, 62],
-    [75, 59],
-    [70, 55],
-    [65, 53],
-    [60, 51],
-    [55, 48],
-    [50, 45],
-    [45, 40],
-    [40, 36],
-    [35, 32],
-    [30, 28],
-    [25, 23],
-    [20, 18],
-    [15, 13],
-    [10, 9]
-]
+
+if CAM == 0: # defender
+    distance = [
+        [210, 89],
+        [175, 88],
+        [165, 87],
+        [140, 86],
+        [135, 84],
+        [125, 82],
+        [120, 81],
+        [115, 79],
+        [110, 77],
+        [105, 74],
+        [100, 72],
+        [95, 70],
+        [90, 68],
+        [85, 65],
+        [80, 62],
+        [75, 59],
+        [70, 55],
+        [65, 53],
+        [60, 51],
+        [55, 48],
+        [50, 45],
+        [45, 40],
+        [40, 36],
+        [35, 32],
+        [30, 28],
+        [25, 23],
+        [20, 18],
+        [15, 13],
+        [10, 9]
+    ]
+elif CAM == 1: # attacker
+    distance = [
+        [210, 120],
+        [165, 104],
+        [160, 104],
+        [155, 103],
+        [150, 103],
+        [145, 102],
+        [140, 101],
+        [135, 99],
+        [130, 98],
+        [125, 97],
+        [120, 95],
+        [115, 94],
+        [110, 93],
+        [105, 92],
+        [100, 91],
+        [95, 88],
+        [90, 86],
+        [85, 84],
+        [80, 81],
+        [75, 77],
+        [70, 74],
+        [65, 70],
+        [60, 65],
+        [55, 60],
+        [50, 56],
+        [45, 50],
+        [40, 45],
+        [35, 39],
+        [30, 34],
+        [25, 28],
+        [20, 21],
+        [15, 13],
+        [10, 9]
+    ]
 
 # 160/120
 
@@ -116,7 +175,7 @@ data = bytearray(7)
 
 
 def send_data(num1, num2, num3, num4, num5, num6):
-    # print(num1, num2, num3, num4, num5, num6, sep='\t')
+    print(num1, num2, num3, num4, num5, num6, sep='\t')
 
     uart.writechar(255)
     # uart.writechar(stage)
@@ -212,8 +271,8 @@ dx3, dy3 = 0, 0
 ####################################################################################################
 while True:
     clock.tick()
-    img = sensor.snapshot().mask_circle(center[0], center[1], img_radius)
-    img.draw_circle(center[0], center[1], 12, (0, 0, 0), fill=True)
+    img = sensor.snapshot()  # .mask_circle(center[0], center[1], img_radius)
+    img.draw_circle(center[0], center[1], 10, (0, 0, 0), fill=True)
     old_roundness = 0
     for Orange_blob in img.find_blobs([Orange_threshold], invert=False, merge=True, margin=5, area_threshold=1, pixels_threshold=1):
         # print(Orange_blob.pixels())
@@ -309,7 +368,7 @@ while True:
         img.draw_rectangle(Yel_blob.rect(), color=(0, 0, 0), thickness=5)
 
     # print(Yel_alpha)
-    print(Yel_dist)
+    # print(Yel_dist)
     # print(Yel_alpha, Blue_alpha)
     # print(dx3, dy3, Orange_alpha, Orange_dist)
     img.draw_line(bdx, bdy, ydx, ydy, (255, 255, 255), 3)

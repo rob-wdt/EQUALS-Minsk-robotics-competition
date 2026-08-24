@@ -1,67 +1,85 @@
 void Camera()
 {
-    if (Serial3.available() > 6)
+  if (Serial3.available() >= 8)
+  {
+    // Serial.println("BEGIN");
+    byte _byte = Serial3.read();
+    // Serial.println(_byte);
+    if (_byte == 255)
     {
-        // Serial.println("BEGIN");
-        byte _byte = Serial3.read();
-        // Serial.println(_byte);
-        if (_byte == 255)
-        {
-            // Serial.println("FIRST BYTE RECIEVED");
-            for (int i = 0; i < 7; i++)
-            {
-                data_cam[i] = Serial3.read();
-                // Serial.println(data_cam[i]);
-            }
-            byte crc = crc8(data_cam, 6);
-            // Serial.println(data_cam[6]);
-            // Serial.println(crc);
-            if (crc == data_cam[6])
-            {
-                // Serial.println("q ");
-                yel_angle = data_cam[0] * 3;
-                yel_dist = data_cam[1] * 3;
-                blue_angle = data_cam[2] * 3;
-                blue_dist = data_cam[3] * 3;
-                ball_cam_dist = data_cam[4] * 3;
-                ball_cam_angle = data_cam[5] * 3;
+      // Serial.println("FIRST BYTE RECIEVED");
+      for (int i = 0; i < 7; i++)
+      {
+        data_cam[i] = Serial3.read();
+        // Serial.println(data_cam[i]);
+      }
+      byte crc = crc8(data_cam, 6);
+      // Serial.println(data_cam[6]);
+      // Serial.println(crc);
+      if (crc == data_cam[6])
+      {
+        // Serial.println("q ");
+        yel_angle = data_cam[0] * 3;
+        yel_dist = data_cam[1] * 3;
+        blue_angle = data_cam[2] * 3;
+        blue_dist = data_cam[3] * 3;
+        ball_cam_dist = data_cam[4] * 3;
+        ball_cam_angle = data_cam[5] * 3;
 
-                //        Serial.print("  ball_cam_dist  ");
-                //        Serial.print(ball_cam_dist);//180-
-                //        Serial.print("  blue_angle\t  ");
-                //        Serial.print(blue_angle);
-                //        Serial.println("  ");
-            }
-        }
+        //        Serial.print("  ball_cam_dist  ");
+        //        Serial.print(ball_cam_dist);//180-
+        //        Serial.print("  blue_angle\t  ");
+        //        Serial.print(blue_angle);
+        //        Serial.println("  ");
+      }
     }
+  }
 }
 
 float normalize_angle(float angle) // from the camera we recieve the angle between 0 and 360. if the ball is leftside (the angle should be negative), it is between 180 and 360. so, this function converts the angle from the camera to the real angle.
 {
+  if (angle > 0)
+  {
     if (angle > 0 && angle <= 180)
     {
-        return angle;
+      return angle;
     }
     else if (angle >= 180 && angle < 360)
     {
-        return angle - 360;
+      return angle - 360;
     }
+  }
+  else if (angle < 0)
+  {
+    if (angle >= -180 && angle < 0)
+    {
+      return angle;
+    }
+    else if (angle > -360 && angle <= -180)
+    {
+      return angle + 360;
+    }
+  }
+  else
+  {
+    return angle;
+  }
 }
 
 uint8_t crc8(uint8_t *data, int len)
 {
-    uint8_t crc = 0xFF, i, j;
-    for (i = 0; i < len; i++)
+  uint8_t crc = 0xFF, i, j;
+  for (i = 0; i < len; i++)
+  {
+    crc ^= data[i];
+    for (j = 0; j < 8; j++)
     {
-        crc ^= data[i];
-        for (j = 0; j < 8; j++)
-        {
-            if (crc & 0x80)
-                crc = (char)((crc << 1) ^ 0x31);
-            else
-                crc <<= 1;
-        }
+      if (crc & 0x80)
+        crc = (char)((crc << 1) ^ 0x31);
+      else
+        crc <<= 1;
     }
+  }
 
-    return crc;
+  return crc;
 }

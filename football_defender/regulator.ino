@@ -5,3 +5,9 @@ double PDcube(float err){
   //Serial.println(u);
   return u;
 }
+
+double PC(double error, double kp, double kc)
+{
+  double u{kp * error + kc * pow(error, kc)};
+  return u;
+}

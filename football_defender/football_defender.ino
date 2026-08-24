@@ -9,7 +9,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define OTLADKA 8
+#define OTLADKA 9
 /*Макрос отладки
   0-рабочий режим
   1-проверка моторов
@@ -20,7 +20,11 @@
   6-проверка дриблера
   7-проверка дальномеров
   8-координаты
+  9-ауты
+  10-выравнивание по гиро
 */
+
+#define SPEED 150
 
 #define GOAL_YELLOW 0
 #define GOAL_BLUE 1
@@ -37,7 +41,7 @@ Servo dribblerESC;
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 // коэффициенты
-#define KP 0.8   // Пропрц.коэф.
+#define KP 2.0  // Пропрц.коэф.
 #define KD 20.0  // Диф.коэф.
 #define KPX 0.31 // 0.22
 #define KPY 0.33 // 0.35
@@ -45,15 +49,19 @@ Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 #define KPY2 0.71 // 0.35
 #define KDX 1.5
 #define KPX2 0.15
-const int right_out2G = 80;
-const int left_out2G = -78;
-const int right_out1G = 55;
-const int left_out1G = -57;
-int right_out = 0;
-int left_out = 0;
 
-const int forward_out = 15;
-const int backward_out = 15;
+#if OWN_GOAL == GOAL_YELLOW
+const int right_out = 25;
+const int left_out = -30;
+const int forward_out = 60;
+const int backward_out = 60;
+
+#elif OWN_GOAL == GOAL_BLUE
+const int right_out = 50;
+const int left_out = -50;
+const int forward_out = 30;
+const int backward_out = 60;
+#endif
 
 const float YzeroFront = 40; // 36
 const float YzeroFront2 = 34;
@@ -188,7 +196,7 @@ float alphaY;
 float alphaX;
 float ball_cam_angle;
 byte switchT_C;
-float ball_cam_dist;
+float ball_cam_dist;  // distance from the robot to the ball
 bool flagStart = true;
 
 int State = 0;
@@ -199,25 +207,25 @@ int State = 0;
 */
 class Motor
 {
-private:
+  private:
     int speedMotor;
 
-public:
+  public:
     int port1; // порт мотора
     int port2; // порт мотора
 
     void setSpeeds(int speeds)
     { // функция скорости моторов
-        if (speeds > 0)
-        {
-            digitalWrite(port1, LOW);             // Направление вращения мотора
-            analogWrite(port2, min(speeds, 220)); // Скорость вращения мотора
-        }
-        else
-        {
-            digitalWrite(port2, LOW);              // Направление вращения мотора
-            analogWrite(port1, min(-speeds, 220)); // Скорость вращения мотора
-        }
+      if (speeds > 0)
+      {
+        digitalWrite(port1, LOW);             // Направление вращения мотора
+        analogWrite(port2, min(speeds, 220)); // Скорость вращения мотора
+      }
+      else
+      {
+        digitalWrite(port2, LOW);              // Направление вращения мотора
+        analogWrite(port1, min(-speeds, 220)); // Скорость вращения мотора
+      }
     }
 };
 
@@ -228,275 +236,245 @@ Motor motor4;
 
 void setup()
 {
-    // put your setup code here, to run once:
-    Serial.begin(115200);
-    Serial3.begin(115200);
-    Serial.println("Start");
-    // digitalWrite(pinsolin, LOW);
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+  Serial3.begin(115200);
+  Serial.println("Start");
+  // digitalWrite(pinsolin, LOW);
 
-    pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(A14, OUTPUT);
-    pinMode(ADDR_P1, OUTPUT);
-    pinMode(ADDR_P2, OUTPUT);
-    pinMode(ADDR_P3, OUTPUT);
-    pinMode(ADDR_P4, OUTPUT);
-    pinMode(BUT1, INPUT);
-    pinMode(BUT2, INPUT);
-    pinMode(BUT3, INPUT);
-    pinMode(pinsolin, OUTPUT);
-    pinMode(BALL_SEN_SIGNAL_1, INPUT_PULLUP);
-    pinMode(BALL_SEN_SIGNAL_2, INPUT_PULLUP);
-    pinMode(FOTOTRANZ, INPUT);
-    digitalWrite(30, LOW);
-    digitalWrite(24, LOW);
-    digitalWrite(22, LOW);
-    while (1)
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(A14, OUTPUT);
+  pinMode(ADDR_P1, OUTPUT);
+  pinMode(ADDR_P2, OUTPUT);
+  pinMode(ADDR_P3, OUTPUT);
+  pinMode(ADDR_P4, OUTPUT);
+  pinMode(BUT1, INPUT);
+  pinMode(BUT2, INPUT);
+  pinMode(BUT3, INPUT);
+  pinMode(pinsolin, OUTPUT);
+  pinMode(BALL_SEN_SIGNAL_1, INPUT_PULLUP);
+  pinMode(BALL_SEN_SIGNAL_2, INPUT_PULLUP);
+  pinMode(FOTOTRANZ, INPUT);
+  digitalWrite(30, LOW);
+  digitalWrite(24, LOW);
+  digitalWrite(22, LOW);
+  while (1)
+  {
+    digitalWrite(30, HIGH);
+    if (digitalRead(BUT1) == 0)
     {
-        digitalWrite(30, HIGH);
-        if (digitalRead(BUT1) == 0)
-        {
 
-            break;
-        }
+      break;
     }
+  }
 
-    // Serial.print("dffg");
-    Wire.begin();
-    Wire.setClock(400000);
-    // Wire.setWireTimeout(100);
-    //  инициализация DMP
-    //   mpu.initialize();
-    //   mpu.dmpInitialize();
-    //   mpu.setDMPEnabled(true);
-    uint16_t gyroTimer = millis();
-    unsigned long t0 = millis();
-    timer_kick = millis();
-    bno.begin();
-    bno.setMode(OPERATION_MODE_IMUPLUS);
+  // Serial.print("dffg");
+  Wire.begin();
+  Wire.setClock(400000);
+  // Wire.setWireTimeout(100);
+  //  инициализация DMP
+  //   mpu.initialize();
+  //   mpu.dmpInitialize();
+  //   mpu.setDMPEnabled(true);
+  uint16_t gyroTimer = millis();
+  unsigned long t0 = millis();
+  timer_kick = millis();
+  bno.begin();
+  bno.setMode(OPERATION_MODE_IMUPLUS);
 #if OTLADKA == 0
-    while ((gyroTimer - t0) < 5000)
-    {
-        gyroTimer = millis(); // без повторного объявления типа
-        gyro();
-        digitalWrite(LED_BUILTIN, millis() % 200 > 100);
-        // Serial.println(gyroTimer);
-    }
-    gyroTimer = 0;
-    errAngleGyro = angleGyro;
+  while ((gyroTimer - t0) < 5000)
+  {
+    gyroTimer = millis(); // без повторного объявления типа
+    gyro();
+    digitalWrite(LED_BUILTIN, millis() % 200 > 100);
+    // Serial.println(gyroTimer);
+  }
+  gyroTimer = 0;
+  errAngleGyro = angleGyro;
 #elif OTLADKA == 2
-    while ((gyroTimer - t0) < 5000)
-    {
-        gyroTimer = millis(); // без повторного объявления типа
-        gyro();
-        digitalWrite(LED_BUILTIN, millis() % 200 > 100);
-        Serial.println(gyroTimer);
-    }
-    gyroTimer = 0;
-    errAngleGyro = angleGyro;
+  while ((gyroTimer - t0) < 5000)
+  {
+    gyroTimer = millis(); // без повторного объявления типа
+    gyro();
+    digitalWrite(LED_BUILTIN, millis() % 200 > 100);
+    Serial.println(gyroTimer);
+  }
+  gyroTimer = 0;
+  errAngleGyro = angleGyro;
 #elif OTLADKA == 8
-    while ((gyroTimer - t0) < 5000)
-    {
-        gyroTimer = millis(); // без повторного объявления типа
-        gyro();
-        digitalWrite(LED_BUILTIN, millis() % 200 > 100);
-        // Serial.println(gyroTimer);
-    }
-    gyroTimer = 0;
-    errAngleGyro = angleGyro;
+  while ((gyroTimer - t0) < 5000)
+  {
+    gyroTimer = millis(); // без повторного объявления типа
+    gyro();
+    digitalWrite(LED_BUILTIN, millis() % 200 > 100);
+    // Serial.println(gyroTimer);
+  }
+  gyroTimer = 0;
+  errAngleGyro = angleGyro;
 #endif
 
-    motor2.port1 = M2_1;
-    motor2.port2 = M2_2;
-    motor4.port1 = M4_1;
-    motor4.port2 = M4_2;
-    motor3.port1 = M3_2;
-    motor3.port2 = M3_1;
-    motor1.port1 = M1_2;
-    motor1.port2 = M1_1;
-    if (Dribler == true)
-    {
-        dribblerESC.attach(DRIBLER_PORT);
-        delay(500);
-        dribblerESC.writeMicroseconds(1630);
-        delay(500);
-        dribblerESC.writeMicroseconds(800);
-        delay(500);
-        //    dribblerESC.writeMicroseconds(ESC_ARM_LOW);
-        //    delay(500);
-    }
-    Serial.print("End");
-    digitalWrite(30, LOW);
+  motor2.port1 = M2_1;
+  motor2.port2 = M2_2;
+  motor4.port1 = M4_1;
+  motor4.port2 = M4_2;
+  motor3.port1 = M3_2;
+  motor3.port2 = M3_1;
+  motor1.port1 = M1_2;
+  motor1.port2 = M1_1;
+  if (Dribler == true)
+  {
+    dribblerESC.attach(DRIBLER_PORT);
+    delay(500);
+    dribblerESC.writeMicroseconds(1630);
+    delay(500);
+    dribblerESC.writeMicroseconds(800);
+    delay(500);
+    //    dribblerESC.writeMicroseconds(ESC_ARM_LOW);
+    //    delay(500);
+  }
+  Serial.print("End");
+  digitalWrite(30, LOW);
 }
 
 void loop()
 {
-    while (flagStart == true)
-    {
-        goAngle(0, 0, 0);
-        digitalWrite(22, HIGH);
-        digitalWrite(24, LOW);
-        if (digitalRead(BUT2) == 0)
-        {
-            Serial.println("Start game");
-            flagStart = false;
-            break;
-        }
-    }
-
+  while (flagStart == true)
+  {
+    goAngle(0, 0, 0);
     digitalWrite(22, HIGH);
     digitalWrite(24, LOW);
+    if (digitalRead(BUT2) == 0)
+    {
+      Serial.println("Start game");
+      flagStart = false;
+      break;
+    }
+  }
+
+  digitalWrite(22, HIGH);
+  digitalWrite(24, LOW);
 
 #if OTLADKA == 0
-    updates();
-    ball_cam_angle = normalize_angle(ball_cam_angle);
-    // tactic();
+  updates();
+  ball_cam_angle = normalize_angle(ball_cam_angle);
 
-    int16_t move_angle{90};
+  int16_t move_angle{90};
+  int16_t linear_speed{PC(ball_cam_angle, 3.0, 0.01)};
 
-    int16_t linear_speed{ball_cam_angle * 2.5};
-
-    Serial.print(move_angle);
-    Serial.print("\t");
-    Serial.print(linear_speed);
-    Serial.print("\t");
-    Serial.print(own_goal_distance);
-    Serial.print("\t||\t");
-    Serial.println(y);
-
-    bool kicking{ball_retention <= 2};
-
-    // if (y <= 70)
-    // {
-        goAngle(move_angle, 0, linear_speed);
-        
-        if (kicking)
-        {
-            if (millis() - timer_kick >= 3000)
-            {
-                kick();
-                timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
-            }
-            kick_Del();
-        }
-    // }
-    // else
-    // {
-    //     goAngle(180, 0, 200);
-    // }
+  if (!flagOut)
+  {
+    if (y <=
+#if OWN_GOAL == GOAL_YELLOW
+        80  
+#elif OWN_GOAL == GOAL_BLUE
+        70
+#endif
+       )
+    {
+      goAngle(move_angle, 0, linear_speed);
+    }
+    else
+    {
+      goAngle(180, 0, SPEED);
+    }
+  }
+  else
+  {
+    goAngle(out_angle, 0, SPEED);
+  }
 
 #elif OTLADKA == 1
-    gyro();
-    corAng = lead_to_degree_borders(angleGyro - errAngleGyro);
-    goAngle(-90, corAng, 100);
-    //  motor1.setSpeeds(150); //m1
-    //  motor2.setSpeeds(150); //m2
-    //  motor3.setSpeeds(150); //m3
-    //  motor4.setSpeeds(150); // m4
+  gyro();
+  corAng = lead_to_degree_borders(angleGyro - errAngleGyro);
+  goAngle(90, corAng, 200);
+  //  motor1.setSpeeds(150); //m1
+  //  motor2.setSpeeds(150); //m2
+  //  motor3.setSpeeds(150); //m3
+  //  motor4.setSpeeds(150); // m4
 #elif OTLADKA == 2
-    corAng = lead_to_degree_borders(angleGyro - errAngleGyro);
-    gyro();
-    Serial.print("corAng\t  ");
-    Serial.print(corAng); // 180-
-    Serial.print("  angleGyro  ");
-    Serial.print(angleGyro); // 180-
-    Serial.print("  errAngleGyro\t  ");
-    Serial.print(errAngleGyro); // 180-
-    Serial.println(" ");
+  corAng = lead_to_degree_borders(angleGyro - errAngleGyro);
+  gyro();
+  Serial.print("corAng\t  ");
+  Serial.print(corAng); // 180-
+  Serial.print("  angleGyro  ");
+  Serial.print(angleGyro); // 180-
+  Serial.print("  errAngleGyro\t  ");
+  Serial.print(errAngleGyro); // 180-
+  Serial.println(" ");
 
-    goAngle(0, 0, 0);
+  goAngle(0, 0, 0);
 #elif OTLADKA == 3
-    // Camera();
-    updates();
-    Serial.print(own_goal_angle);
-    Serial.print("\t");
-    Serial.print(own_goal_distance);
-    Serial.print("  ||  ");
-    Serial.print(ball_cam_angle);
-    Serial.print("  ||  ");
-    Serial.print(ball_cam_dist);
-    Serial.println(" "); // 180-
+  // Camera();
+  updates();
+
 #elif OTLADKA == 4
-    data_tcops();
-    for (int i = 0; i < 32; i++)
-    {
-        Serial.print(ball_data[i]); // 4tc - 2
-        Serial.print(" ");
-    }
-    Serial.println(" ");
-    // Serial.print(ball_ts_distance);
+  data_tcops();
+  for (int i = 0; i < 32; i++)
+  {
+    Serial.print(ball_data[i]); // 4tc - 2
     Serial.print(" ");
-    Serial.println(ball_ts_angle);
+  }
+  Serial.println(" ");
+  // Serial.print(ball_ts_distance);
+  Serial.print(" ");
+  Serial.println(ball_ts_angle);
 
 #elif OTLADKA == 5
-    if (millis() - timer_kick >= 5000)
+  readSensors();
+  bool kicking{ball_retention <= 1};
+  Serial.println(ball_retention);
+  if (kicking)
+  {
+    if (millis() - timer_kick >= 3000)
     {
-        kick();
-        timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+      kick();
+      timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
     }
     kick_Del();
-    //  Serial.print("  ");
-    //  Serial.println("1241");
+  }
+  //  Serial.print("  ");
+  //  Serial.println("1241");
 #elif OTLADKA == 6
-    //  for (int pos = 800; pos <= 1630; pos += 1)
-    //  {
-    dribblerESC.writeMicroseconds(1620);
-    // delay(20);
-    // Serial.println(pos);
-    //   }
+  //  for (int pos = 800; pos <= 1630; pos += 1)
+  //  {
+  dribblerESC.writeMicroseconds(1620);
+  // delay(20);
+  // Serial.println(pos);
+  //   }
 
 #elif OTLADKA == 7
-    readSensors();
-    Serial.print("ball_retention");
-    Serial.println(ball_retention);
-    //  Serial.print("Right_dist");
-    //  Serial.print(Right_dist);
-    //  Serial.print("Forward_dist");
-    //  Serial.print(Forward_dist);
-    //  Serial.print("Back_dist");
-    //  Serial.println(Back_dist);
+  readSensors();
+  Serial.print("ball_retention");
+  Serial.println(ball_retention);
+  //  Serial.print("Right_dist");
+  //  Serial.print(Right_dist);
+  //  Serial.print("Forward_dist");
+  //  Serial.print(Forward_dist);
+  //  Serial.print("Back_dist");
+  //  Serial.println(Back_dist);
 #elif OTLADKA == 8
-    updates();
-    Serial.print(corAng);
-    Serial.print("corAng\t  ");
-    Serial.print(abs_forward_angle);
-    Serial.print("  ");
-    Serial.print(abs_backward_angle);
-    Serial.print("  ||  ");
-    //  Serial.print(yel_angle);
-    //  Serial.print("  ");
-    //  Serial.print(blue_angle);
-    //  Serial.print("  ||  ");
-    Serial.print(forward_dist);
-    Serial.print("  ");
-    Serial.print(backward_dist);
-    Serial.print("  ||  ");
-    Serial.print(x_backward);
-    Serial.print("  ");
-    Serial.print(x_forward);
-    Serial.print("  ||  ");
-    Serial.print(y_backward);
-    Serial.print("  ");
-    Serial.print(y_forward);
-    Serial.print("  ||  ");
-    Serial.print(Correct_coef);
-    Serial.print("  ");
-    Serial.print(x);
-    Serial.print("  ");
-    Serial.print(y);
-    //  Serial.print("  ");
-    //  Serial.print("  ||  ");
-    //  Serial.print(Correct_coef);
-    //  Serial.print("  ");
-    //  Serial.print(xx);
-    //  Serial.print("  ");
-    //  Serial.print(yy);
-    Serial.println("  ");
+  updates();
+
+#elif OTLADKA == 9
+  updates();
+  goAngle(out_angle, 0, 150);
+  Serial.println(flagOut);
+
+#elif OTLADKA == 10
+  gyro();
+  corAng = angleGyro - errAngleGyro;
+
+  Camera();
+  ball_cam_angle = normalize_angle(ball_cam_angle);
+
+  goAngle(0, ball_cam_angle, 0);
+  Serial.println(ball_cam_angle);
 #endif
 
-    if (digitalRead(BUT3) == 0 && flagStart == false)
-    {
+  if (digitalRead(BUT3) == 0 && flagStart == false)
+  {
 
-        flagStart = true;
-        Serial.println("Stop");
-    }
+    flagStart = true;
+    Serial.println("Stop");
+  }
 }

@@ -4,6 +4,10 @@ void goAngle(float angle, float seeAngle, int speeds)
     float err = 0, speedRotate = 0;
     err = -lead_to_degree_borders(corAng - seeAngle);
     speedRotate = PDcube(err);
+
+    Serial.print(corAng);
+    Serial.print(' ');
+    Serial.println(err);
     //  angle *= 0.017453;
     //  speedMotor1 = speeds * cosf(0.785 + angle);
     //  speedMotor2 = speeds * cosf(2.36 + angle);

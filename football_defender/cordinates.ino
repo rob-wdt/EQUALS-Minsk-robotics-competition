@@ -26,18 +26,18 @@ void polar_dek(float longsX, float alphaX, float longsY, float alphaY) {
 }
 void coordinates() {
 #if OWN_GOAL == GOAL_YELLOW
-    forward_dist = blue_dist ;//blue_dist
-    backward_dist = yel_dist;//yel_dist
-    forward_angle = blue_angle;//blue_angle
-    backward_angle = yel_angle;//yel_angle
+  forward_dist = blue_dist ;//blue_dist
+  backward_dist = yel_dist;//yel_dist
+  forward_angle = blue_angle;//blue_angle
+  backward_angle = yel_angle;//yel_angle
 #elif OWN_GOAL == GOAL_BLUE
-    forward_dist = yel_dist ;//blue_dist
-    backward_dist = blue_dist;//yel_dist
-    forward_angle = yel_angle;//blue_angle
-    backward_angle = blue_angle;
+  forward_dist = yel_dist ;//blue_dist
+  backward_dist = blue_dist;//yel_dist
+  forward_angle = yel_angle;//blue_angle
+  backward_angle = blue_angle;
 #endif
-  
-  if(forward_angle == 0 && forward_dist == 0) forward_angle = 0;
+
+  if (forward_angle == 0 && forward_dist == 0) forward_angle = 0;
   abs_ball_angle = lead_to_degree_borders(ball_cam_angle + corAng);
   abs_forward_angle = lead_to_degree_borders(forward_angle + corAng);
   abs_backward_angle = lead_to_degree_borders(backward_angle + corAng);
@@ -58,7 +58,6 @@ void coordinates() {
       x = (x_backward * (1 - Correct_coef));
       y = (y_backward * (1 - Correct_coef));
       //left_X_dop =
-      flagOneGate = true;
       Serial.println("back");
     }
     else if ((backward_dist == 0 || forward_dist < 100) && forward_dist != 0) {
@@ -66,31 +65,18 @@ void coordinates() {
       x = (x_forward * (1 - Correct_coef));
       y = (y_forward * (1 - Correct_coef));
 
-      flagOneGate = true;
       Serial.println("for");
     }
     else {
       Correct_coef = (backward_dist - forward_dist) / (2 * (forward_dist + backward_dist));
       x = (x_forward * Correct_coef) + (x_backward * (1 - Correct_coef));
       y = (y_forward * Correct_coef) + (y_backward * (1 - Correct_coef));
-      flagOneGate = false;
       Serial.println(" 2gate ");
-    }
-    if (flagOneGate == false) {
-      right_out = right_out2G;
-      left_out = left_out2G;
-      //Serial.println(" 2gate ");
-    }
-    else {
-      right_out = right_out1G;
-      left_out = left_out1G;
-      //Serial.println(" 1gate ");
-
     }
   }
 }
 void outs() {
-  if ((right_out <= x) || (left_out >= x) || (backward_out >= backward_dist && backward_dist != 0) || (forward_out >= forward_dist && forward_dist != 0)) { //
+  if ((x >= right_out) || (x <= left_out) || (backward_out >= backward_dist && backward_dist != 0) || (forward_out >= forward_dist && forward_dist != 0)) { //
     flagOut = true;
 
     if (left_out >= x) {

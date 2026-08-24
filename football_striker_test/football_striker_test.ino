@@ -7,7 +7,7 @@
 #include <utility/imumaths.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define OTLADKA 3
+#define OTLADKA 10
 /*Макрос отладки
   0-рабочий режим
   1-проверка моторов
@@ -19,6 +19,7 @@
   7-проверка дальномеров
   8-координаты
   9-выравнивание на 0
+  10-ауты
 */
 
 #define SPEED 150
@@ -40,20 +41,22 @@ Servo dribblerESC;
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 // коэффициенты
-#define KP 0.8    // Пропрц.коэф.
-#define KD 20.0   // Диф.коэф.
-#define KC 0.0001 // Куб.коэф.
+#define KP 0.9   // Пропрц.коэф.
+#define KD 20.0  // Диф.коэф.
+#define KC 0.001 // Куб.коэф.
 
-int right_out2G = 100;
-int left_out2G = -55;
-int right_out1G = 80;
-int left_out1G = -45;
+#if OWN_GOAL == GOAL_YELLOW
+const int right_out = 30;
+const int left_out = -40;
+const int forward_out = 40;
+const int backward_out = 60;
 
-int right_out = 0;
-int left_out = 0;
-
-int forward_out = 40;
-int backward_out = 35;
+#elif OWN_GOAL == GOAL_BLUE
+const int right_out = 40;
+const int left_out = -40;
+const int forward_out = 50;
+const int backward_out = 50;
+#endif
 
 int abs_backward_out = 35;
 int abs_forward_out = 0;
@@ -114,7 +117,7 @@ uint8_t MPUIntStatus;
 uint16_t packetSize;
 uint8_t fifoBuffer[45]; // буфер
 uint32_t timer;
-uint32_t timer_kick;
+uint32_t timer_kick{};
 uint32_t timer_kick2;
 uint32_t placementTimer = 0;
 const uint32_t PLACEMENT_ALIGN_MS = 4000;
@@ -182,11 +185,13 @@ float spdGLK;
 float alphaGLK;
 float ball_cam_angle;
 byte switchT_C;
-float ball_cam_dist;
+float ball_cam_dist; // distance from the robot to the ball
 bool flagOff = true;
 bool flagStart = true;
 int spdSHR;
 int spdMinl;
+
+int dribbler_pos{1000};
 
 int State = 0;
 /*
@@ -283,6 +288,8 @@ void setup()
     errAngleGyro = angleGyro;
 #endif
 
+    timer_kick = 0;
+
     motor2.port1 = M2_1;
     motor2.port2 = M2_2;
     motor4.port1 = M4_1;
@@ -296,7 +303,7 @@ void setup()
         dribblerESC.attach(DRIBLER_PORT);
         delay(500);
         dribblerESC.writeMicroseconds(1630);
-        delay(500);
+        delay(1000);
         dribblerESC.writeMicroseconds(800);
         delay(500);
         //    dribblerESC.writeMicroseconds(ESC_ARM_LOW);
@@ -339,26 +346,33 @@ void loop()
         curAngle = angleGyro;
     }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if OTLADKA == 0
-
     digitalWrite(LED_BUILTIN, millis() % 1000 > 500);
     Camera();
     gyro();
     ball_retention = analogRead(PHOTOTRANSISTOR_PIN);
+    coordinates();
+    outs();
 
     ball_cam_angle = normalize_angle(ball_cam_angle);
 
     // circular ball detour
     int16_t move_angle{ball_cam_angle};
-    if (ball_cam_angle < -10)
+
+    if (abs(ball_cam_dist) <= 40)
     {
-        move_angle -= 90;
+        if (ball_cam_angle < -10)
+        {
+            move_angle -= 90;
+        }
+        else if (ball_cam_angle > 10)
+        {
+            move_angle += 90;
+        }
     }
-    else if (ball_cam_angle > 10)
-    {
-        move_angle += 90;
-    }
+    Serial.print("ball distance from robot:\t");
+    Serial.println(abs(ball_cam_angle));
 
     int16_t align_angle{};
 #if OPP_GOAL == GOAL_YELLOW
@@ -369,24 +383,33 @@ void loop()
 
     readSensors();
     bool kicking{ball_retention <= 30};
-    Serial.println(kicking);
 
-    goAngle(move_angle, align_angle, SPEED);
-    if (kicking)
+    if (!flagOut)
     {
-        if (millis() - timer_kick >= 3000)
+        goAngle(move_angle, 0, SPEED);
+        if (kicking)
         {
-            kick();
-            timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+            if (millis() - timer_kick >= 1000)
+            {
+                kick();
+                timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+            }
+            kick_Del();
         }
-        kick_Del();
+    }
+    else
+    {
+        goAngle(out_angle, 0, SPEED);
     }
 
-    Serial.println(String{ball_cam_angle} + '\t' + String{move_angle});
+    Serial.print(ball_cam_angle);
+    Serial.print(' ');
+    Serial.println(move_angle);
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #elif OTLADKA == 1
     updates();
-    goAngle(0, 0, 100);
+    goAngle(90, 0, 150);
     //  motor1.setSpeeds(150); //m1
     //  motor2.setSpeeds(150); //m2
     //  motor3.setSpeeds(150); //m3
@@ -401,6 +424,7 @@ void loop()
     Serial.print("\terrAngleGyro\t");
     Serial.print(errAngleGyro); // 180-
     Serial.println();
+
 #elif OTLADKA == 3
     // Camera();
     updates();
@@ -422,6 +446,7 @@ void loop()
     Serial.print("ball dist\t  ");
     Serial.print(ball_cam_dist);
     Serial.println(" "); // 180-
+
 #elif OTLADKA == 4
     data_tcops();
     for (int i = 0; i < 32; i++)
@@ -437,6 +462,7 @@ void loop()
 #elif OTLADKA == 5
     readSensors();
     bool kicking{ball_retention <= 30};
+    // bool kicking(!digitalRead(BUT2));
     Serial.println(kicking);
     if (kicking)
     {
@@ -444,23 +470,20 @@ void loop()
         {
             kick();
             timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
+            Serial.println("======================KICK================================");
         }
         kick_Del();
     }
     //  Serial.print("  ");
     //  Serial.println("1241");
 #elif OTLADKA == 6
-    updates();
-    dribler(1555);
-    /*if (ball_cam_dist <= 20) {
-        dribler(1615);
-        driblerON = true;
-        }
+    dribler(dribbler_pos);
 
-        else if (ball_retention <= 3 || (driblerON == true && ball_cam_dist == 0)) {
-        dribler(1620);
-        }
-        else if (ball_cam_dist > 20 && ball_cam_dist != 0) {dribler(0);driblerON = false;}*/
+    if (dribbler_pos <= 1700)
+    {
+        dribbler_pos++;
+    }
+
 #elif OTLADKA == 7
     readSensors();
     // Serial.print("ball_retention:\t");
@@ -526,7 +549,14 @@ void loop()
 
     Serial.println("current angle:\t" + String{curAngle} + "\tgoal angle:\t" + String{align_angle});
 
-    goAngle(0, align_angle, 0);
+    goAngle(0, 0, 0);
+
+#elif OTLADKA == 10
+    updates();
+    goAngle(out_angle, 0, 150);
+    Serial.print(flagOut);
+    Serial.print(' ');
+    Serial.println(x);
 #endif
 
     // delay(200);  // антидребезг

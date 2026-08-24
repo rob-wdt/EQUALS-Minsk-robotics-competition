@@ -1,5 +1,5 @@
 void Camera() {
-  if (Serial3.available() > 6)
+  if (Serial3.available() >= 8)
   {
     //Serial.println("BEGIN");
     byte First_bayt = Serial3.read();
