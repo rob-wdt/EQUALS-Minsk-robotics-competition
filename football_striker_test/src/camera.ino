@@ -1,16 +1,16 @@
 void Camera()
 {
-  if (Serial3.available() >= 8)
+  if (UART.available() >= 8)
   {
     // Serial.println("BEGIN");
-    byte _byte = Serial3.read();
+    byte _byte = UART.read();
     // Serial.println(_byte);
     if (_byte == 255)
     {
       // Serial.println("FIRST BYTE RECIEVED");
       for (int i = 0; i < 7; i++)
       {
-        data_cam[i] = Serial3.read();
+        data_cam[i] = UART.read();
         // Serial.println(data_cam[i]);
       }
       byte crc = crc8(data_cam, 6);

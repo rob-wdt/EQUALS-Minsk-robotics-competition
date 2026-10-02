@@ -5,7 +5,7 @@ from machine import LED
 import math
 
 
-CAM = 0
+CAM = 1
 
 if CAM == 0:    # defender
     my_gain = 30
@@ -33,7 +33,7 @@ elif CAM == 1:  # attacker
     exposure = 100_000
     white = (63, 59, 61)
     blue_threshold = (0, 100, -128, -12, -7, 6)
-    yellow_threshold = (0, 100, -16, 127, 26, 127)
+    yellow_threshold = (0, 100, -11, 8, 25, 48)
 
     Orange_threshold = (0, 100, 17, 127, -5, 127)
     img_radius = 120

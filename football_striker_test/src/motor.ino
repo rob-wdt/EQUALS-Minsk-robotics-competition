@@ -14,7 +14,7 @@ void goAngle(float angle, float seeAngle, int speed)
     {
         motor1.setSpeed(speed * cos((-45 + angle) / 180 * 3.14) - speedRotate);
         motor2.setSpeed(-speed * cos((-135 + angle) / 180 * 3.14) - speedRotate);
-        motor3.setSpeed(-speed * cos((135 + angle) / 180 * 3.14) + speedRotate);
+        motor3.setSpeed(speed * cos((135 + angle) / 180 * 3.14) - speedRotate);
         motor4.setSpeed(speed * cos((45 + angle) / 180 * 3.14) + speedRotate);
     }
 }

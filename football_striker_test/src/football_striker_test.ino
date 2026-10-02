@@ -1,4 +1,4 @@
-#include "I2Cdev.h"
+// #include "I2Cdev.h"
 // #include "MPU6050_6Axis_MotionApps20.h"
 #include <Servo.h>
 #include <Wire.h>
@@ -7,7 +7,7 @@
 #include <utility/imumaths.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define OTLADKA 10
+#define OTLADKA 3
 /*Макрос отладки
   0-рабочий режим
   1-проверка моторов
@@ -27,18 +27,20 @@
 #define GOAL_YELLOW 0
 #define GOAL_BLUE 1
 
-#define OWN_GOAL GOAL_YELLOW //////////////////////////
+#define OWN_GOAL GOAL_BLUE //////////////////////////
 
 #if OWN_GOAL == GOAL_YELLOW
 #define OPP_GOAL GOAL_BLUE
 #elif OWN_GOAL == GOAL_BLUE
 #define OPP_GOAL GOAL_YELLOW
 #endif
+
+HardwareSerial UART = Serial3;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Servo dribblerESC;
 // MPU6050 mpu;
-#define BNO055_SAMPLERATE_DELAY_MS (100)
+#define BNO055_SAMPLERATE_DELAY_MS 1100
 Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 // коэффициенты
 #define KP 0.9   // Пропрц.коэф.
@@ -232,7 +234,7 @@ void setup()
 {
     // put your setup code here, to run once:
     Serial.begin(115200);
-    Serial3.begin(115200);
+    UART.begin(115200);
     Serial.print("Start");
     // digitalWrite(pinsolin, LOW);
 
@@ -409,7 +411,7 @@ void loop()
 
 #elif OTLADKA == 1
     updates();
-    goAngle(90, 0, 150);
+    goAngle(0, 0, SPEED);
     //  motor1.setSpeeds(150); //m1
     //  motor2.setSpeeds(150); //m2
     //  motor3.setSpeeds(150); //m3

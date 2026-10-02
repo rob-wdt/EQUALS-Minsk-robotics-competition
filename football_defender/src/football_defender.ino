@@ -1,4 +1,4 @@
-#include "I2Cdev.h"
+// #include "I2Cdev.h"
 // #include "MPU6050_6Axis_MotionApps20.h"
 #include <Servo.h>
 #include <Wire.h>
@@ -6,10 +6,8 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define OTLADKA 9
+#define OTLADKA 0
 /*Макрос отладки
   0-рабочий режим
   1-проверка моторов
@@ -29,11 +27,9 @@
 #define GOAL_YELLOW 0
 #define GOAL_BLUE 1
 
-#define OWN_GOAL GOAL_YELLOW
+#define OWN_GOAL GOAL_BLUE
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 Servo dribblerESC;
 // MPU6050 mpu;
@@ -41,7 +37,7 @@ Servo dribblerESC;
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 // коэффициенты
-#define KP 2.0  // Пропрц.коэф.
+#define KP 2.0   // Пропрц.коэф.
 #define KD 20.0  // Диф.коэф.
 #define KPX 0.31 // 0.22
 #define KPY 0.33 // 0.35
@@ -59,8 +55,8 @@ const int backward_out = 60;
 #elif OWN_GOAL == GOAL_BLUE
 const int right_out = 50;
 const int left_out = -50;
-const int forward_out = 30;
-const int backward_out = 60;
+const int forward_out = 100;
+const int backward_out = 40;
 #endif
 
 const float YzeroFront = 40; // 36
@@ -168,7 +164,7 @@ const int spdMinY = 0;
 const int spdMaxX = 10;
 const int spdMaxY = 15;
 
-float out_angle;
+float out_angle = 0;
 float Fang;
 bool flagOne = true;
 bool kickDel = false;
@@ -196,7 +192,7 @@ float alphaY;
 float alphaX;
 float ball_cam_angle;
 byte switchT_C;
-float ball_cam_dist;  // distance from the robot to the ball
+float ball_cam_dist; // distance from the robot to the ball
 bool flagStart = true;
 
 int State = 0;
@@ -207,26 +203,26 @@ int State = 0;
 */
 class Motor
 {
-  private:
-    int speedMotor;
+private:
+  int speedMotor;
 
-  public:
-    int port1; // порт мотора
-    int port2; // порт мотора
+public:
+  int port1; // порт мотора
+  int port2; // порт мотора
 
-    void setSpeeds(int speeds)
-    { // функция скорости моторов
-      if (speeds > 0)
-      {
-        digitalWrite(port1, LOW);             // Направление вращения мотора
-        analogWrite(port2, min(speeds, 220)); // Скорость вращения мотора
-      }
-      else
-      {
-        digitalWrite(port2, LOW);              // Направление вращения мотора
-        analogWrite(port1, min(-speeds, 220)); // Скорость вращения мотора
-      }
+  void setSpeeds(int speeds)
+  { // функция скорости моторов
+    if (speeds > 0)
+    {
+      digitalWrite(port1, LOW);             // Направление вращения мотора
+      analogWrite(port2, min(speeds, 220)); // Скорость вращения мотора
     }
+    else
+    {
+      digitalWrite(port2, LOW);              // Направление вращения мотора
+      analogWrite(port1, min(-speeds, 220)); // Скорость вращения мотора
+    }
+  }
 };
 
 Motor motor1;
@@ -359,17 +355,24 @@ void loop()
   ball_cam_angle = normalize_angle(ball_cam_angle);
 
   int16_t move_angle{90};
-  int16_t linear_speed{PC(ball_cam_angle, 3.0, 0.01)};
+  int linear_speed = 3.0 * ball_cam_angle;
+
+  Serial.print("x:\t");
+  Serial.print(x);
+  Serial.print("\t|\t");
+  Serial.print("y:\t");
+  Serial.print(y);
+  Serial.print("\t\t");
 
   if (!flagOut)
   {
     if (y <=
 #if OWN_GOAL == GOAL_YELLOW
-        80  
+        80
 #elif OWN_GOAL == GOAL_BLUE
         70
 #endif
-       )
+    )
     {
       goAngle(move_angle, 0, linear_speed);
     }
@@ -377,10 +380,14 @@ void loop()
     {
       goAngle(180, 0, SPEED);
     }
+
+    Serial.println("Not in out");
   }
   else
   {
     goAngle(out_angle, 0, SPEED);
+    Serial.print("In out. Out angle:\t");
+    Serial.println(out_angle);
   }
 
 #elif OTLADKA == 1
@@ -404,8 +411,25 @@ void loop()
 
   goAngle(0, 0, 0);
 #elif OTLADKA == 3
-  // Camera();
   updates();
+  Serial.print("yellow_angle\t  ");
+  Serial.print(normalize_angle(yel_angle));
+  Serial.print("  ||  ");
+  Serial.print("yellow_dist\t  ");
+  Serial.print(yel_dist);
+  Serial.print("  ||  ");
+  Serial.print("blue angle\t  ");
+  Serial.print(normalize_angle(blue_angle));
+  Serial.print("  ||  ");
+  Serial.print("blue dist\t  ");
+  Serial.print(blue_dist);
+  Serial.print("  ||  ");
+  Serial.print("ball_angle\t  ");
+  Serial.print(normalize_angle(ball_cam_angle));
+  Serial.print("  ||  ");
+  Serial.print("ball dist\t  ");
+  Serial.print(ball_cam_dist);
+  Serial.println(); // 180-
 
 #elif OTLADKA == 4
   data_tcops();
@@ -455,10 +479,35 @@ void loop()
 #elif OTLADKA == 8
   updates();
 
+  Serial.print("x:\t");
+  Serial.print(x);
+  Serial.print("\t||\t");
+  Serial.print("y:\t");
+  Serial.print(y);
+  Serial.print("\t\t||\t\t");
+  Serial.print("rear dist.:\t");
+  Serial.print(backward_dist);
+  Serial.print("\t||\t");
+  Serial.print("front dist.:\t");
+  Serial.println(forward_dist);
+
 #elif OTLADKA == 9
   updates();
   goAngle(out_angle, 0, 150);
-  Serial.println(flagOut);
+  Serial.print("In out:\t");
+  Serial.print(flagOut);
+  Serial.print("\t\t||\t\t");
+  Serial.print("x:\t");
+  Serial.print(x);
+  Serial.print("\t||\t");
+  Serial.print("y:\t");
+  Serial.print(y);
+  Serial.print("\t\t||\t\t");
+  Serial.print("rear dist.:\t");
+  Serial.print(backward_dist);
+  Serial.print("\t||\t");
+  Serial.print("front dist.:\t");
+  Serial.println(forward_dist);
 
 #elif OTLADKA == 10
   gyro();
