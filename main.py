@@ -5,7 +5,7 @@ from machine import LED
 import math
 
 
-CAM = 1
+CAM = 0
 
 if CAM == 0:    # defender
     my_gain = 30
@@ -32,12 +32,12 @@ elif CAM == 1:  # attacker
     my_gain = 30
     exposure = 100_000
     white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, -12, -7, 6)
-    yellow_threshold = (0, 100, -11, 8, 25, 48)
+    blue_threshold = (0, 100, -128, -11, -128, 2)
+    yellow_threshold = (68, 100, -23, 127, 23, 127)
 
-    Orange_threshold = (0, 100, 17, 127, -5, 127)
+    Orange_threshold = (0, 100, 4, 127, 17, 127)
     img_radius = 120
-    center = (sensor.width() // 2 + 13, sensor.height() // 2 - 13)
+    center = (sensor.width() // 2 + 13, sensor.height() // 2 - 10)
 
     # my_gain = 20
     # exposure = 50_000
@@ -49,8 +49,6 @@ elif CAM == 1:  # attacker
     # img_radius = 120
     # center = (sensor.width() // 2 - 6, sensor.height() // 2 - 20)
 
-
-led = LED("LED_GREEN")
 uart = pyb.UART(3, 115200, timeout=100, timeout_char=100)
 uart.init(115200, bits=8, parity=False, stop=1, timeout_char=100)
 sensor.reset()
@@ -273,9 +271,17 @@ Old_Yel_dist, Yel_dist, Old_Yel_alpha, Yel_alpha = 0, 0, 0, 0
 switch = 0
 dx3, dy3 = 0, 0
 
+led = pyb.LED(1)
+led_last_toggle_time = time.ticks_ms()
+
 ####################################################################################################
 while True:
     clock.tick()
+    current_time = time.ticks_ms()
+    if time.ticks_diff(current_time, led_last_toggle_time) >= 500:
+        led.toggle()
+        led_last_toggle_time = current_time
+
     img = sensor.snapshot()  # .mask_circle(center[0], center[1], img_radius)
     img.draw_circle(center[0], center[1], 15, (0, 0, 0), fill=True)
     old_roundness = 0
@@ -334,7 +340,6 @@ while True:
                 Blue_dist = linearize(get_distance(dx, dy))
                 Blue_alpha = angle_0_360_from(dx, dy, ANGLE_OFFSET)
                 img.draw_circle(Bl_w + Bl_x, Bl_h + Bl_y, 1)
-                # img.draw_rectangle(Blue_blob.rect(), color=(0,0,255))
             else:
                 Blue_dist = Old_Blue_dist
                 Blue_alpha = Old_Blue_alpha
@@ -344,7 +349,6 @@ while True:
 
     if len(blue_blobs):
         img.draw_rectangle(Blue_blob.rect(), color=(0, 0, 0), thickness=5)
-        # print(get_distance(dx, dy))
 
     # yellow
     yellow_blobs = img.find_blobs([yellow_threshold], invert=False, merge=True, margin=20)
@@ -361,11 +365,8 @@ while True:
             dy2 = center[1] - yy2
             ydx = xx2
             ydy = yy2
-            # Yel_dist = linearize(get_distance(dx2, dy2))
             Yel_dist = get_distance(dx2, dy2)
             Yel_alpha = angle_0_360_from(dx2, dy2, ANGLE_OFFSET)
-            # img.draw_rectangle(Yel_blob.rect(), color=(0,255,0))
-            img.draw_circle(Yel_w + Yel_x, Yel_h + Yel_y, 1)
         else:
             Yel_dist = Old_Yel_dist
             Yel_alpha = Old_Yel_alpha

@@ -22,7 +22,7 @@
   10-выравнивание по гиро
 */
 
-#define SPEED 200
+#define SPEED 150
 
 #define GOAL_YELLOW 0
 #define GOAL_BLUE 1
@@ -47,16 +47,16 @@ Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 #define KPX2 0.15
 
 #if OWN_GOAL == GOAL_YELLOW
-const int right_out = 40;
-const int left_out = -40;
-const int forward_out = 100;
-const int backward_out = 20;
+const int right_out = 35;
+const int left_out = -35;
+const int forward_out = 80;
+const int backward_out = 30;
 
 #elif OWN_GOAL == GOAL_BLUE
-const int right_out = 50;
-const int left_out = -50;
+const int right_out = 35;
+const int left_out = -35;
 const int forward_out = 100;
-const int backward_out = 25;
+const int backward_out = 30;
 #endif
 
 const float YzeroFront = 40; // 36
@@ -103,7 +103,7 @@ bool flagCentr = false;
 #define M4_2 7
 // Порт управления солиноидом
 #define pinsolin 31
-bool Dribler = true; // true false
+bool Dribler = true;
 volatile bool MPUInterrupt = false;
 
 uint8_t MPUIntStatus;
@@ -320,15 +320,17 @@ void setup()
   if (Dribler == true)
   {
     dribblerESC.attach(DRIBLER_PORT);
-    delay(500);
-    dribblerESC.writeMicroseconds(1630);
-    delay(500);
-    dribblerESC.writeMicroseconds(800);
-    delay(500);
+    delay(1000);
+    dribblerESC.writeMicroseconds(1200);
+    delay(1000);
+    dribblerESC.writeMicroseconds(1400);
+    delay(1000);
+    dribblerESC.writeMicroseconds(1200);
+    delay(1000);
     //    dribblerESC.writeMicroseconds(ESC_ARM_LOW);
     //    delay(500);
   }
-  Serial.print("End");
+  Serial.println("End");
   digitalWrite(30, LOW);
 }
 
@@ -351,63 +353,67 @@ void loop()
   digitalWrite(24, LOW);
 
 #if OTLADKA == 0
+  digitalWrite(LED_BUILTIN, millis() % 1000 > 500);
   updates();
+
   ball_cam_angle = normalize_angle(ball_cam_angle);
 
-  int16_t move_angle{90};
-  int linear_speed = 3.0 * ball_cam_angle;
+  // circular ball detour
+  int16_t move_angle{ball_cam_angle};
 
-  Serial.print("x:\t");
-  Serial.print(x);
-  Serial.print("\t|\t");
-  Serial.print("y:\t");
-  Serial.print(y);
-  Serial.print("\t\t");
+  if (abs(ball_cam_dist) <= 50)
+  {
+    if (ball_cam_angle < -10)
+    {
+      move_angle -= 90;
+    }
+    else if (ball_cam_angle > 10)
+    {
+      move_angle += 90;
+    }
+  }
 
-  bool moving_forward = abs(ball_cam_angle) <= 10 && ball_cam_dist <= 20;
+  Serial.print(ball_cam_dist);
+  Serial.print("\t");
+  Serial.print(ball_cam_angle);
+  Serial.print("\t\t||\t\t");
+  Serial.print(move_angle);
+  Serial.print("\t\t||\t\t");
+  Serial.println(flagOut);
+
+  int16_t align_angle{};
+
+#if OWN_GOAL == GOAL_BLUE
+  align_angle = yel_angle;
+#elif OWN_GOAL == GOAL_YELLOW
+  align_angle = blue_angle;
+#endif
+
+  bool kicking = ball_retention <= 30;
 
   if (!flagOut)
   {
-    if (y <=
-#if OWN_GOAL == GOAL_YELLOW
-        60
-#elif OWN_GOAL == GOAL_BLUE
-        70
-#endif
-    )
+    goAngle(move_angle, 0, SPEED);
+    if (kicking)
     {
-      if (moving_forward)
+      if (millis() - timer_kick >= 1000)
       {
-        goAngle(0, 0, SPEED);
-
-        if (millis() - timer_kick >= 1000)
-        {
-          kick();
-          timer_kick = millis();
-        }
-        kick_Del();
+        kick();
+        timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
       }
-
-      goAngle(move_angle, 0, linear_speed);
+      kick_Del();
     }
-    else
-    {
-      goAngle(180, 0, SPEED);
-    }
-
-    Serial.println("Not in out");
   }
   else
   {
     goAngle(out_angle, 0, SPEED);
-    Serial.print("In out. Out angle:\t");
-    Serial.println(out_angle);
   }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #elif OTLADKA == 1
-  gyro();
-  corAng = lead_to_degree_borders(angleGyro - errAngleGyro);
-  goAngle(90, corAng, 200);
+  updates();
+  // corAng = lead_to_degree_borders(angleGyro - errAngleGyro);
+  goAngle(0, 0, 150);
   //  motor1.setSpeeds(150); //m1
   //  motor2.setSpeeds(150); //m2
   //  motor3.setSpeeds(150); //m3
@@ -425,7 +431,8 @@ void loop()
 
   goAngle(0, 0, 0);
 #elif OTLADKA == 3
-  updates();
+  // updates();
+  Camera();
   Serial.print("yellow_angle\t  ");
   Serial.print(normalize_angle(yel_angle));
   Serial.print("  ||  ");
@@ -475,15 +482,17 @@ void loop()
 #elif OTLADKA == 6
   //  for (int pos = 800; pos <= 1630; pos += 1)
   //  {
-  dribblerESC.writeMicroseconds(1620);
+  dribblerESC.writeMicroseconds(1700);
   // delay(20);
   // Serial.println(pos);
   //   }
 
 #elif OTLADKA == 7
   readSensors();
-  Serial.print("ball_retention");
+  dribblerESC.writeMicroseconds(1400);
+  Serial.print("ball_retention:\t");
   Serial.println(ball_retention);
+  dribler(1400);
   //  Serial.print("Right_dist");
   //  Serial.print(Right_dist);
   //  Serial.print("Forward_dist");
@@ -510,18 +519,15 @@ void loop()
   goAngle(out_angle, 0, 150);
   Serial.print("In out:\t");
   Serial.print(flagOut);
-  Serial.print("\t\t||\t\t");
+  Serial.print("\t|\t");
+  Serial.print("out angle:\t");
+  Serial.print(out_angle);
+  Serial.print("\t\t|\t\t");
   Serial.print("x:\t");
   Serial.print(x);
-  Serial.print("\t||\t");
+  Serial.print("\t|\t");
   Serial.print("y:\t");
-  Serial.print(y);
-  Serial.print("\t\t||\t\t");
-  Serial.print("rear dist.:\t");
-  Serial.print(backward_dist);
-  Serial.print("\t||\t");
-  Serial.print("front dist.:\t");
-  Serial.println(forward_dist);
+  Serial.println(y);
 
 #elif OTLADKA == 10
   gyro();
@@ -531,7 +537,8 @@ void loop()
   ball_cam_angle = normalize_angle(ball_cam_angle);
 
   goAngle(0, ball_cam_angle, 0);
-  Serial.println(ball_cam_angle);
+  Serial.println(yel_angle);
+
 #endif
 
   if (digitalRead(BUT3) == 0 && flagStart == false)

@@ -16,7 +16,7 @@ void data_tcops() {
     ball_data[ir_addr3[i]] = 1 - digitalRead(BALL_SEN_SIGNAL_1);
     ball_data[ir_addr3[i+16]] = 1 - digitalRead(BALL_SEN_SIGNAL_2);
     
-    //delayMicroseconds(10);
+    delayMicroseconds(10);
     if (ball_data[11] == 1 && ball_data[13] == 1){
       ball_data[12] = 1;
     }
@@ -40,6 +40,6 @@ void readSensors(){
 //  Right_dist = analogRead(DATCHIK_DIST_RIGHT);
 //  Forward_dist = analogRead(DATCHIK_DIST_FORWARD);
 //  Back_dist = analogRead(DATCHIK_DIST_BACK);
-  ball_retention = analogRead(PHOTOTRANSISTOR_PIN);
+  ball_retention = analogRead(FOTOTRANZ);
   
 }
