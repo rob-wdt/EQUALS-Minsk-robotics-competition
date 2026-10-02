@@ -5,53 +5,53 @@ from machine import LED
 import math
 
 
-CAM = 1
+CAM = 0
 
 if CAM == 0:    # defender
+    my_gain = 30
+    exposure = 100_000
+    white = (63, 59, 61)
+    blue_threshold = (0, 100, -128, -11, -128, 4)
+    yellow_threshold = (0, 100, -22, -1, 31, 127)
+
+    Orange_threshold = (0, 100, 4, 127, 17, 127)
+    img_radius = 120
+    center = (sensor.width() // 2 - 5, sensor.height() // 2 - 18)
+
     # my_gain = 20
-    # exposure = 100_000
+    # exposure = 50_000
     # white = (63, 59, 61)
     # blue_threshold = (0, 100, -128, -1, -128, -5)
-    # yellow_threshold = (0, 100, -128, 26, 49, 127)
+    # yellow_threshold = (0, 100, -3, 28, 36, 56)
 
     # Orange_threshold = (0, 100, 26, 127, -128, 127)
     # img_radius = 120
     # center = (sensor.width() // 2 + 12, sensor.height() // 2 - 5)
 
-    my_gain = 20
-    exposure = 50_000
-    white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, -1, -128, -5)
-    yellow_threshold = (0, 100, -3, 28, 36, 56)
-
-    Orange_threshold = (0, 100, 26, 127, -128, 127)
-    img_radius = 120
-    center = (sensor.width() // 2 + 12, sensor.height() // 2 - 5)
-
 elif CAM == 1:  # attacker
-    # my_gain = 20
-    # exposure = 100_000
-    # white = (63, 59, 61)
-    # blue_threshold = (24, 68, -60, 2, -88, 6)
-    # yellow_threshold = (0, 100, -1, 21, 45, 58)
-
-    # Orange_threshold = (0, 100, 17, 127, -5, 127)
-    # img_radius = 120
-    # center = (sensor.width() // 2 - 8, sensor.height() // 2 - 20)
-
-    my_gain = 20
-    exposure = 50_000
+    my_gain = 30
+    exposure = 100_000
     white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, -3, -128, -6)
-    yellow_threshold = (0, 100, -4, 20, 30, 49)
+    blue_threshold = (0, 100, -128, -12, -7, 6)
+    yellow_threshold = (0, 100, -16, 127, 26, 127)
 
-    Orange_threshold = (0, 100, 20, 127, -128, 127)
+    Orange_threshold = (0, 100, 17, 127, -5, 127)
     img_radius = 120
-    center = (sensor.width() // 2 - 6, sensor.height() // 2 - 20)
+    center = (sensor.width() // 2 + 13, sensor.height() // 2 - 13)
+
+    # my_gain = 20
+    # exposure = 50_000
+    # white = (63, 59, 61)
+    # blue_threshold = (0, 100, -128, -3, -128, -6)
+    # yellow_threshold = (0, 100, -4, 20, 30, 49)
+
+    # Orange_threshold = (0, 100, 20, 127, -128, 127)
+    # img_radius = 120
+    # center = (sensor.width() // 2 - 6, sensor.height() // 2 - 20)
 
 
 led = LED("LED_GREEN")
-uart = pyb.UART(1, 115200, timeout=100, timeout_char=100)
+uart = pyb.UART(3, 115200, timeout=100, timeout_char=100)
 uart.init(115200, bits=8, parity=False, stop=1, timeout_char=100)
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
@@ -86,39 +86,44 @@ blue_distance = 0
 ANGLE_OFFSET = 0
 ANGLE_OFFSET_BALL = 0
 
-if CAM == 0: # defender
+if CAM == 0:  # defender
     distance = [
-        [210, 89],
-        [175, 88],
-        [165, 87],
-        [140, 86],
-        [135, 84],
-        [125, 82],
-        [120, 81],
-        [115, 79],
-        [110, 77],
-        [105, 74],
-        [100, 72],
-        [95, 70],
-        [90, 68],
-        [85, 65],
-        [80, 62],
-        [75, 59],
-        [70, 55],
-        [65, 53],
-        [60, 51],
-        [55, 48],
-        [50, 45],
-        [45, 40],
-        [40, 36],
-        [35, 32],
-        [30, 28],
-        [25, 23],
-        [20, 18],
-        [15, 13],
-        [10, 9]
+        [210, 103],
+        [165, 100],
+        [160, 100],
+        [155, 99],
+        [150, 98],
+        [145, 96],
+        [140, 94],
+        [135, 93],
+        [130, 92],
+        [125, 87],
+        [120, 87],
+        [115, 86],
+        [110, 84],
+        [105, 83],
+        [100, 81],
+        [95, 81],
+        [90, 79],
+        [85, 76],
+        [80, 74],
+        [75, 72],
+        [70, 68],
+        [65, 65],
+        [60, 61],
+        [55, 57],
+        [50, 55],
+        [45, 50],
+        [40, 46],
+        [35, 41],
+        [30, 35],
+        [25, 30],
+        [20, 24],
+        [15, 17],
+        [10, 11]
     ]
-elif CAM == 1: # attacker
+
+elif CAM == 1:  # attacker
     distance = [
         [210, 120],
         [165, 104],
@@ -147,12 +152,12 @@ elif CAM == 1: # attacker
         [50, 56],
         [45, 50],
         [40, 45],
-        [35, 39],
-        [30, 34],
-        [25, 28],
-        [20, 21],
-        [15, 13],
-        [10, 9]
+        [35, 41],
+        [30, 35],
+        [25, 30],
+        [20, 24],
+        [15, 17],
+        [10, 11]
     ]
 
 # 160/120
@@ -272,7 +277,7 @@ dx3, dy3 = 0, 0
 while True:
     clock.tick()
     img = sensor.snapshot()  # .mask_circle(center[0], center[1], img_radius)
-    img.draw_circle(center[0], center[1], 10, (0, 0, 0), fill=True)
+    img.draw_circle(center[0], center[1], 15, (0, 0, 0), fill=True)
     old_roundness = 0
     for Orange_blob in img.find_blobs([Orange_threshold], invert=False, merge=True, margin=5, area_threshold=1, pixels_threshold=1):
         # print(Orange_blob.pixels())
@@ -339,6 +344,7 @@ while True:
 
     if len(blue_blobs):
         img.draw_rectangle(Blue_blob.rect(), color=(0, 0, 0), thickness=5)
+        # print(get_distance(dx, dy))
 
     # yellow
     yellow_blobs = img.find_blobs([yellow_threshold], invert=False, merge=True, margin=20)
