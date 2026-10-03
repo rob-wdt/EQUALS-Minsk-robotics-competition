@@ -4,18 +4,18 @@ import sensor
 import math
 
 
-CAM = 0
+CAM = 1
 
 if CAM == 0:    # defender
-    my_gain = 25
+    my_gain = 23
     exposure = 100_000
     white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, 2, -128, -7)
-    yellow_threshold = (0, 100, 0, 73, 42, 127)
+    blue_threshold = (0, 100, -128, -11, -128, 8)
+    yellow_threshold = (0, 100, 0, 30, 48, 65)
 
-    Orange_threshold = (0, 100, 28, 127, 28, 43)
+    Orange_threshold = (0, 100, 24, 68, 47, 118)
     img_radius = 120
-    center = (sensor.width() // 2 + 12, sensor.height() // 2)
+    center_offset = (-3, -13)
 
     # my_gain = 20
     # exposure = 50_000
@@ -32,11 +32,11 @@ elif CAM == 1:  # attacker
     exposure = 100_000
     white = (63, 59, 61)
     blue_threshold = (0, 100, -128, -10, -128, 6)
-    yellow_threshold = (0, 100, -6, 9, 47, 127)
+    yellow_threshold = (0, 100, 3, 18, 42, 127)
 
     Orange_threshold = (0, 100, 14, 127, 38, 127)
     img_radius = 120
-    center = (sensor.width() // 2 + 13, sensor.height() // 2 - 10)
+    center_offset = (13, -10)
 
     # my_gain = 20
     # exposure = 50_000
@@ -49,7 +49,7 @@ elif CAM == 1:  # attacker
     # center = (sensor.width() // 2 - 6, sensor.height() // 2 - 20)
 
 uart = pyb.UART(3, 115200, timeout=100, timeout_char=100)
-uart.init(115200, bits=8, parity=False, stop=1, timeout_char=100)
+uart.init(115200, bits=8, parity=None, stop=1, timeout_char=100)
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
@@ -74,6 +74,9 @@ sensor.skip_frames(time=1000)
 
 img_height = sensor.height()
 img_width = sensor.width()
+# центр считаем только после sensor.reset()/set_framesize(), иначе при автономном
+# запуске (без IDE) размер кадра ещё 0x0 и центр получается неверным
+center = (img_width // 2 + center_offset[0], img_height // 2 + center_offset[1])
 
 old_area = 0
 yellow_angle = 0
