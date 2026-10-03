@@ -4,7 +4,7 @@ import sensor
 import math
 
 
-CAM = 1
+CAM = 0
 
 if CAM == 0:    # defender
     my_gain = 25

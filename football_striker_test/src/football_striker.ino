@@ -48,15 +48,15 @@ Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 
 #if OWN_GOAL == GOAL_YELLOW
 const int right_out = 30;
-const int left_out = -30;
-const int forward_out = 75;
+const int left_out = -35;
+const int forward_out = 76;
 const int backward_out = 40;
 
 #elif OWN_GOAL == GOAL_BLUE
-const int right_out = 50;
-const int left_out = -50;
+const int right_out = 35;
+const int left_out = -35;
 const int forward_out = 100;
-const int backward_out = 20;
+const int backward_out = 30;
 #endif
 
 const float YzeroFront = 40; // 36
@@ -489,10 +489,10 @@ void loop()
 
 #elif OTLADKA == 7
   readSensors();
-  dribblerESC.writeMicroseconds(1400);
+  // dribblerESC.writeMicroseconds(1400);
   Serial.print("ball_retention:\t");
   Serial.println(ball_retention);
-  dribler(1400);
+  // dribler(1400);
   //  Serial.print("Right_dist");
   //  Serial.print(Right_dist);
   //  Serial.print("Forward_dist");
@@ -527,7 +527,10 @@ void loop()
   Serial.print(x);
   Serial.print("\t|\t");
   Serial.print("y:\t");
-  Serial.println(y);
+  Serial.print(y);
+  Serial.print("\t|\t");
+  Serial.print("forward dist.:\t");
+  Serial.println(forward_dist);
 
 #elif OTLADKA == 10
   gyro();

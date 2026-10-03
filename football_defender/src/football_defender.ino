@@ -56,7 +56,7 @@ const int backward_out = 30;
 const int right_out = 50;
 const int left_out = -50;
 const int forward_out = 100;
-const int backward_out = 25;
+const int backward_out = 40;
 #endif
 
 const float YzeroFront = 40; // 36
