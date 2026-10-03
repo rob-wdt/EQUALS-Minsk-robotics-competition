@@ -1,22 +1,21 @@
 import time
 import pyb
 import sensor
-from machine import LED
 import math
 
 
-CAM = 0
+CAM = 1
 
 if CAM == 0:    # defender
-    my_gain = 30
+    my_gain = 25
     exposure = 100_000
     white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, -11, -128, 4)
-    yellow_threshold = (0, 100, -22, -1, 31, 127)
+    blue_threshold = (0, 100, -128, 2, -128, -7)
+    yellow_threshold = (0, 100, 0, 73, 42, 127)
 
-    Orange_threshold = (0, 100, 4, 127, 17, 127)
+    Orange_threshold = (0, 100, 28, 127, 28, 43)
     img_radius = 120
-    center = (sensor.width() // 2 - 5, sensor.height() // 2 - 18)
+    center = (sensor.width() // 2 + 12, sensor.height() // 2)
 
     # my_gain = 20
     # exposure = 50_000
@@ -29,13 +28,13 @@ if CAM == 0:    # defender
     # center = (sensor.width() // 2 + 12, sensor.height() // 2 - 5)
 
 elif CAM == 1:  # attacker
-    my_gain = 30
+    my_gain = 25
     exposure = 100_000
     white = (63, 59, 61)
-    blue_threshold = (0, 100, -128, -11, -128, 2)
-    yellow_threshold = (68, 100, -23, 127, 23, 127)
+    blue_threshold = (0, 100, -128, -10, -128, 6)
+    yellow_threshold = (0, 100, -6, 9, 47, 127)
 
-    Orange_threshold = (0, 100, 4, 127, 17, 127)
+    Orange_threshold = (0, 100, 14, 127, 38, 127)
     img_radius = 120
     center = (sensor.width() // 2 + 13, sensor.height() // 2 - 10)
 

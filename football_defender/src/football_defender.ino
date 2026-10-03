@@ -22,12 +22,12 @@
   10-выравнивание по гиро
 */
 
-#define SPEED 200
+#define SPEED 150
 
 #define GOAL_YELLOW 0
 #define GOAL_BLUE 1
 
-#define OWN_GOAL GOAL_YELLOW
+#define OWN_GOAL GOAL_BLUE
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,10 +47,10 @@ Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 #define KPX2 0.15
 
 #if OWN_GOAL == GOAL_YELLOW
-const int right_out = 40;
-const int left_out = -40;
-const int forward_out = 100;
-const int backward_out = 20;
+const int right_out = 50;
+const int left_out = -50;
+const int forward_out = 80;
+const int backward_out = 30;
 
 #elif OWN_GOAL == GOAL_BLUE
 const int right_out = 50;

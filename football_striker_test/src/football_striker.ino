@@ -47,16 +47,16 @@ Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x29, &Wire);
 #define KPX2 0.15
 
 #if OWN_GOAL == GOAL_YELLOW
-const int right_out = 35;
-const int left_out = -35;
-const int forward_out = 80;
-const int backward_out = 30;
+const int right_out = 30;
+const int left_out = -30;
+const int forward_out = 75;
+const int backward_out = 40;
 
 #elif OWN_GOAL == GOAL_BLUE
-const int right_out = 35;
-const int left_out = -35;
+const int right_out = 50;
+const int left_out = -50;
 const int forward_out = 100;
-const int backward_out = 30;
+const int backward_out = 20;
 #endif
 
 const float YzeroFront = 40; // 36
@@ -363,11 +363,11 @@ void loop()
 
   if (abs(ball_cam_dist) <= 50)
   {
-    if (ball_cam_angle < -10)
+    if (ball_cam_angle < -30)
     {
       move_angle -= 90;
     }
-    else if (ball_cam_angle > 10)
+    else if (ball_cam_angle > 30)
     {
       move_angle += 90;
     }
@@ -466,7 +466,7 @@ void loop()
 
 #elif OTLADKA == 5
   readSensors();
-  bool kicking{ball_retention <= 1};
+  bool kicking{digitalRead(BUT1) == 0};
   Serial.println(ball_retention);
   if (kicking)
   {
@@ -475,8 +475,8 @@ void loop()
       kick();
       timer_kick = millis(); // обязательно обновить, иначе kick будет вызываться постоянно
     }
-    kick_Del();
   }
+  kick_Del();
   //  Serial.print("  ");
   //  Serial.println("1241");
 #elif OTLADKA == 6
@@ -535,8 +535,9 @@ void loop()
 
   Camera();
   ball_cam_angle = normalize_angle(ball_cam_angle);
+  blue_angle = normalize_angle(blue_angle);
 
-  goAngle(0, ball_cam_angle, 0);
+  goAngle(0, blue_angle, 0);
   Serial.println(yel_angle);
 
 #endif
